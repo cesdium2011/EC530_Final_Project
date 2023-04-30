@@ -6,7 +6,6 @@ from flask_dance.contrib.google import make_google_blueprint, google
 from werkzeug.utils import secure_filename
 from feed_ingester import feed_ingester
 from doc_feed_analyzer import analyze_document, analyze_feed
-from datetime import datetime
 
 # Configure app, logging, and queue
 app = Flask(__name__)
@@ -44,32 +43,14 @@ def index():
 @app.route('/upload_file', methods=['POST'])
 @login_required
 def upload_file():
-    # ... file upload logic here ...
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(request.url)
-    file = request.files['file']
-    if file.filename == '':
-        flash('No file selected')
-        return redirect(request.url)
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        logging.info(f"File uploaded: {filename}")
-    else:
-        flash('File type not allowed')
-        return redirect(request.url)
+    # ... file upload logic here (as in the previous answer) ...
 
 @app.route('/ingest_feed', methods=['POST'])
 @login_required
 def ingest_feed():
     url = request.form['url']
-    try:
-        feed_items = feed_ingester(url)
-        # ... process feed_items ...
-    except Exception as e:
-        flash(f"Error ingesting feed: {str(e)}")
-        return redirect(request.url)
+    feed_items = feed_ingester(url)
+    # ... process feed_items ...
 
 @app.route('/analyze')
 @login_required

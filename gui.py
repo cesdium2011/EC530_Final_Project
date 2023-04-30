@@ -1,30 +1,28 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
-from models import create_user, get_user_by_email, check_password
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QFormLayout, QMessageBox
+from PyQt5.QtCore import Qt
+from werkzeug.security import generate_password_hash, check_password_hash
+from app import db, load_user
+from models import User
+from flask_login import login_user
 
-class RegisterWindow(QWidget):
+class RegisterDialog(QDialog):
     def __init__(self):
         super().__init__()
 
-        self.init_ui()
-
-    def init_ui(self):
         self.setWindowTitle("Register")
 
-        layout = QVBoxLayout()
+        layout = QFormLayout()
 
         self.username_input = QLineEdit()
-        layout.addWidget(QLabel("Username:"))
-        layout.addWidget(self.username_input)
+        layout.addRow("Username", self.username_input)
 
         self.email_input = QLineEdit()
-        layout.addWidget(QLabel("Email:"))
-        layout.addWidget(self.email_input)
+        layout.addRow("Email", self.email_input)
 
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)
-        layout.addWidget(QLabel("Password:"))
-        layout.addWidget(self.password_input)
+        layout.addRow("Password", self.password_input)
 
         self.register_button = QPushButton("Register")
         self.register_button.clicked.connect(self.register)
@@ -37,20 +35,83 @@ class RegisterWindow(QWidget):
         email = self.email_input.text()
         password = self.password_input.text()
 
-        if not get_user_by_email(email):
-            create_user(username, email, password)
-            self.close()
-        else:
-            self.username_input.clear()
-            self.email_input.clear()
-            self.password_input.clear()
-            self.email_input.setPlaceholderText("Email already exists")
+        user = User.query.filter_by(email=email).first()
+        if user:
+            QMessageBox.warning(self, "Error", "Email address already exists.")
+            return
 
-def main():
-    app = QApplication(sys.argv)
-    register_window = RegisterWindow()
-    register_window.show()
-    sys.exit(app.exec_())
+        new_user = User(username=username, email=email, password=generate_password_hash(password, method="sha256"))
+        db.session.add(new_user)
+        db.session.commit()
+
+        QMessageBox.information(self, "Success", "User registered successfully.")
+        self.accept()
+
+class LoginDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Login")
+
+        layout = QFormLayout()
+
+        self.email_input = QLineEdit()
+        layout.addRow("Email", self.email_input)
+
+        self.password_input = QLineEdit()
+        self.password_input.setEchoMode(QLineEdit.Password)
+        layout.addRow("Password", self.password_input)
+
+        self.login_button = QPushButton("Login")
+        self.login_button.clicked.connect(self.login)
+        layout.addWidget(self.login_button)
+
+        self.setLayout(layout)
+
+    def login(self):
+        email = self.email_input.text()
+        password = self.password_input.text()
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user or not check_password_hash(user.password, password):
+            QMessageBox.warning(self, "Error", "Please check your login details and try again.")
+            return
+
+        login_user(user)
+        QMessageBox.information(self, "Success", "User logged in successfully.")
+        self.accept()
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("User Management")
+
+        layout = QVBoxLayout()
+
+        self.login_button = QPushButton("Login")
+        self.login_button.clicked.connect(self.show_login_dialog)
+        layout.addWidget(self.login_button)
+
+        self.register_button = QPushButton("Register")
+        self.register_button.clicked.connect(self.show_register_dialog)
+        layout.addWidget(self.register_button)
+
+        central_widget = QWidget()
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
+
+    def show_login_dialog(self):
+        login_dialog = LoginDialog()
+        login_dialog.exec_()
+
+    def show_register_dialog(self):
+        register_dialog = RegisterDialog()
+        register_dialog.exec_()
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(app.exec_())
