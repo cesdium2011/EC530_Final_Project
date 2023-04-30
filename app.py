@@ -9,6 +9,7 @@ from feed_ingester import feed_ingester
 from doc_feed_analyzer import analyze_document, analyze_feed
 from flask_sqlalchemy import SQLAlchemy
 from models import db, User
+from functools import wraps
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 
@@ -45,6 +46,11 @@ login_manager.login_view = "login"
 def load_user(user_id):
     
     return User.query.get(int(user_id))
+
+@app.route('/protected_route')
+@login_required
+def protected_route():
+    return "This is a protected route. You must be logged in to access it."
 
 # Authentication decorator
 def login_required(func):
