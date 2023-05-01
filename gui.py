@@ -1,10 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QFormLayout, QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QFormLayout, QMessageBox, QWidget
 from PyQt5.QtCore import Qt
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, load_user
 from models import User
 from flask_login import login_user
+
 
 class RegisterDialog(QDialog):
     def __init__(self):

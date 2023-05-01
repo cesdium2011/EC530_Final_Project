@@ -1,7 +1,7 @@
 import os
 import logging
 import queue
-from flask import Flask, request, redirect, flash, url_for, render_template, jsonify
+from flask import Flask, request, redirect, flash, url_for, render_template, jsonify, abort
 from flask_dance.contrib.google import make_google_blueprint, google
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,6 +11,8 @@ from flask_sqlalchemy import SQLAlchemy
 from models import db, User
 from functools import wraps
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from celery import Celery
+
 
 
 # Configure app, logging, databases and queue
@@ -153,6 +155,26 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for("index"))
+
+
+#error handling
+@app.errorhandler(400)
+def bad_request(error):
+    response = jsonify({"error": "Bad Request", "message": str(error)})
+    response.status_code = 400
+    return response
+
+@app.errorhandler(403)
+def forbidden(error):
+    response = jsonify({"error": "Forbidden", "message": str(error)})
+    response.status_code = 403
+    return response
+
+@app.errorhandler(404)
+def not_found(error):
+    response = jsonify({"error": "Not Found", "message": str(error)})
+    response.status_code = 404
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
