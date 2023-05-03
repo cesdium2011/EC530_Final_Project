@@ -4,3 +4,7 @@ INFO:werkzeug:[33mPress CTRL+C to quit[0m
 INFO:werkzeug: * Restarting with watchdog (fsevents)
 WARNING:werkzeug: * Debugger is active!
 INFO:werkzeug: * Debugger PIN: 414-035-778
+INFO:werkzeug: * Detected change in '/Users/taozhanzhang/Documents/GitHub/EC530_Final_Project/Queue/queue.py', reloading
+INFO:werkzeug: * Restarting with watchdog (fsevents)
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 414-035-778
