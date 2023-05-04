@@ -18,9 +18,9 @@ As a developer, I want to have error messages and logging in place so that I can
 
 
 ## Prerequist 
-Python 3.8+
-Redis
-(optional)pip3
+- Python 3.8+
+- Redis
+- (optional)pip3
 
 ## Installation
 
