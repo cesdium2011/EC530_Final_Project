@@ -5,6 +5,53 @@
 ## Intro
 This is the repository of EC530 Final Project, The application features Google OAuth2 authentication, file uploading and reading, feed ingestion, and processing. 
 
+## Architecture
+
+The project has the following structure:
+
+
+.
+├── app.py                     # Flask API and routes
+
+├── api/
+
+│   ├── __init__.py
+│   ├── upload_api.py          # Upload file API endpoint
+│   ├── ingest_feed_api.py     # Ingest feed API endpoint
+│   └── analyzer.py            # Document and feed analyzer
+
+├── gui.py                     # PyQt5-based GUI
+
+├── templates/
+│   ├── login.html             # Login template
+│   └── register.html          # Registration template
+
+├── static/
+│   └── css/                   # Stylesheets
+
+├── tests/
+│   └── test_app.py            # Unit tests for app.py
+
+├── README.md                  # Project documentation
+└── requirements.txt           # Python dependencies
+
+## Main Components
+`app.py`: Contains the Flask API and routes, serving as the main entry point for the application.
+
+`api/`: Contains the API endpoints and the document/feed analyzer.
+upload_api.py: Implements the file upload API endpoint.
+
+`ingest_feed_api.py`: Implements the feed ingestion API endpoint.
+analyzer.py: Provides functionality for analyzing uploaded documents and ingested feeds.
+
+`gui.py`: Implements a PyQt5-based graphical user interface for the application.
+
+`templates/`: Contains the HTML templates for the login and registration pages.
+
+`static/`: Contains static files, such as stylesheets.
+
+`tests/`: Contains unit tests for the application.
+test_app.py: Unit tests for app.py.
 
 ## User Story
 - As a user, I want to be able to log in using my Gmail account so that I can access my saved data.
