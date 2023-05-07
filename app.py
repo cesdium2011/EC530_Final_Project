@@ -12,11 +12,18 @@ from models import db, User
 from functools import wraps
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from celery import Celery
+from flask_restful import Api, Resource
+from flasgger import Swagger
 
 
 
 # Configure app, logging, databases and queue
 app = Flask(__name__)
+api = Api(app)
+
+#API setup
+swagger = Swagger(app)
+
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your_secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
@@ -62,6 +69,82 @@ def login_required(func):
             return redirect(url_for("google.login"))
         return func(*args, **kwargs)
     return decorated_view
+
+#API preset
+
+class UploadAPI(Resource):
+    def post(self):
+        """
+        Upload a file
+        ---
+        tags:
+          - File Management
+        parameters:
+          - in: formData
+            name: file
+            type: file
+            required: true
+            description: The file to upload
+        responses:
+          200:
+            description: File uploaded and read successfully
+        """
+        #file upload logic
+        file = request.files.get('file')
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join("uploaded_files", filename))
+            return {"message": "File uploaded and saved.", "filename": filename}, 200
+        else:
+            return {"error": "No file provided."}, 400
+
+
+class IngestFeedAPI(Resource):
+    def post(self):
+        """
+        Ingest a feed
+        ---
+        tags:
+          - Feed Management
+        parameters:
+          - in: formData
+            name: feed_url
+            type: string
+            required: true
+            description: The URL of the feed to ingest
+        responses:
+          200:
+            description: Feed ingestion initiated. Processing in the background.
+        """
+        #feed ingestion logic
+        feed_url = request.form.get('feed_url')
+        if feed_url:
+            task = process_feed.delay(feed_url)
+            return {"message": "Feed ingestion initiated. Processing in the background.", "task_id": str(task.id)}, 200
+        else:
+            return {"error": "No feed URL provided."}, 400
+
+api.add_resource(UploadAPI, '/api/upload')
+api.add_resource(IngestFeedAPI, '/api/ingest_feed')
+
+#Celery instance for API 
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+def make_celery(app):
+    celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'],
+                    broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    return celery
+
+celery = make_celery(app)
+
+@celery.task()
+def process_feed(feed_url):
+    feed = feedparser.parse(feed_url)
+    # Process the feed data as needed
+    # Save the processed data to a database, file, or any other storage
+    return {"message": f"Feed '{feed_url}' processed."}
 
 # Routes
 @app.route('/')
@@ -175,6 +258,9 @@ def not_found(error):
     response = jsonify({"error": "Not Found", "message": str(error)})
     response.status_code = 404
     return response
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
