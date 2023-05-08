@@ -137,5 +137,10 @@ We welcome contributions to this project. If you're interested in contributing, 
 4. Push your changes to your forked repository.
 5. Open a pull request describing the changes you've made.
 
+## Example Results
+The GUI after login:
+![alt text](https://github.com/cesdium2011/EC530_Final_Project/blob/main/UI_shot.png?raw=true)
+
+
 ### License 
 This project is licensed under the MIT License. See the LICENSE file for more details.
